@@ -1,7 +1,16 @@
+import 'dart:async';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 
-class EspWifiProvisioningService {
+enum EspConnectState {
+  fail,
+  idle,
+  connected,
+  connecting,
+  badCredentials
+}
+
+class EspWifiProvisioning {
   static Future<bool> isConnectedToEspAP({
     Duration timeout = const Duration(seconds: 2),
   }) async {
@@ -38,7 +47,7 @@ class EspWifiProvisioningService {
     }
   }
 
-  static Future<bool> getWifiStatus({
+  static Future<EspConnectState> getWifiStatus({
     Duration timeout = const Duration(seconds: 5),
   }) async {
     try {
@@ -49,14 +58,30 @@ class EspWifiProvisioningService {
           )
           .timeout(timeout);
 
-      if (response.statusCode != 200) return false;
+      if (response.statusCode != 200) return EspConnectState.fail;
 
-      final Map<String, dynamic> body =
-          jsonDecode(response.body) as Map<String, dynamic>;
-
-      return body["connected"] == true;
+      return _getWifiState(jsonDecode(response.body));
     } catch (_) {
-      return false;
+      return EspConnectState.fail;
+    }
+  }
+
+  static EspConnectState _getWifiState(dynamic body) {
+    switch (body["status"]) {
+      case "connected":
+        return EspConnectState.connected;
+
+      case "connecting":
+        return EspConnectState.connecting;
+
+      case "bad_credentials":
+        return EspConnectState.badCredentials;
+
+      case "idle":
+        return EspConnectState.idle;
+
+      default:
+        return EspConnectState.fail;
     }
   }
 }
