@@ -7,7 +7,9 @@ enum EspConnectState {
   idle,
   connected,
   connecting,
-  badCredentials
+  badCredentials,
+  timeout,
+  lostConnection,
 }
 
 class EspWifiProvisioning {
@@ -61,6 +63,8 @@ class EspWifiProvisioning {
       if (response.statusCode != 200) return EspConnectState.fail;
 
       return _getWifiState(jsonDecode(response.body));
+    } on TimeoutException {
+      return EspConnectState.timeout;
     } catch (_) {
       return EspConnectState.fail;
     }

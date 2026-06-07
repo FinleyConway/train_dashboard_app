@@ -1,6 +1,10 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:train_dashboard_app/core/network/esp_wifi_provisioning.dart';
 import 'package:train_dashboard_app/features/esp_connect/esp_connect_controller.dart';
+import 'package:train_dashboard_app/features/esp_connect/widgets/status_button.dart';
+
+enum EspConnect { connect, provide }
 
 class EspConnectPage extends StatefulWidget {
   const EspConnectPage({super.key});
@@ -10,127 +14,133 @@ class EspConnectPage extends StatefulWidget {
 }
 
 class _EspConnectPageState extends State<EspConnectPage> {
-  late final EspConnectController controller;
+  late final EspConnectController _controller;
+  EspConnect state = EspConnect.connect;
 
   @override
   void initState() {
     super.initState();
-    controller = EspConnectController();
+    _controller = EspConnectController();
 
-    controller.addListener(() {
+    _controller.addListener(() {
       setState(() {});
     });
   }
 
   @override
   void dispose() {
-    controller.dispose();
+    _controller.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Center(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              _buildIcon(),
-              const SizedBox(height: 32),
-              _buildTitle(),
-              const SizedBox(height: 64),
-              _buildButton(),
-              const SizedBox(height: 24),
-              _buildStatus(),
-            ],
-          ),
+      body: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 24),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: ui(),
         ),
       ),
     );
+  }
+
+  List<Widget> ui() {
+    if (state == EspConnect.connect) {
+      return _connect();
+    } else {
+      return _provide();
+    }
+  }
+
+  List<Widget> _connect() {
+    return [
+      _buildIcon(),
+      const SizedBox(height: 32),
+      _buildTitle("Connect to the train's access point"),
+      const SizedBox(height: 64),
+      StatusButton(
+        label: "Begin",
+        isLoading: _controller.isLoading,
+        isError: _controller.isError,
+        errorText: "Unable to connect!",
+        onPressed: _checkConnection,
+      ),
+    ];
+  }
+
+  List<Widget> _provide() {
+    return [
+      _buildTitle("Provide the SSID and password"),
+      const SizedBox(height: 32),
+      _buildTextField("SSID", _controller.ssidController),
+      const SizedBox(height: 16),
+      _buildTextField("Password", _controller.passwordController, hiddenText: true),
+      const SizedBox(height: 24),
+
+      StatusButton(
+        label: "Connect",
+        isLoading: _controller.isLoading,
+        isError: _controller.isError,
+        errorText: "Provided wrong credentials to connect",
+        onPressed: _tryConnect,
+      ),
+    ];
   }
 
   Widget _buildIcon() {
     return const Icon(Icons.wifi, size: 100);
   }
 
-  Widget _buildTitle() {
-    return const Text(
-      "Connect to the train's access point",
+  Widget _buildTitle(String label) {
+    return Text(
+      label,
       style: TextStyle(fontSize: 20),
       textAlign: TextAlign.center,
     );
   }
 
-  Widget _buildButton() {
-    return SizedBox(
-      width: double.infinity,
-      child: ElevatedButton(
-        onPressed: controller.isCheckingConnection
-            ? null
-            : _checkConnection,
-
-        style: ElevatedButton.styleFrom(
-          backgroundColor: const Color(0xFFA20021),
-          foregroundColor: Colors.white,
-          padding: const EdgeInsets.symmetric(vertical: 16),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-          elevation: 2,
-        ),
-
-        child: const Text(
-          "Begin",
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
-        ),
+  Widget _buildTextField(String label, TextEditingController controller, {bool hiddenText = false}) {
+    return TextField(
+      controller: controller,
+      obscureText: hiddenText,
+      decoration: InputDecoration(
+        labelText: label,
+        border: OutlineInputBorder(),
       ),
     );
   }
 
-  Widget _buildStatus() {
-    return SizedBox(
-      height: 40,
-      child: Center(
-        child: AnimatedSwitcher(
-          duration: const Duration(milliseconds: 200),
-
-          child: controller.isCheckingConnection
-              ? const SizedBox(
-                  key: ValueKey("loading"),
-                  width: 28,
-                  height: 28,
-                  child: CircularProgressIndicator(strokeWidth: 3),
-                )
-              : controller.showError
-                  ? const Text(
-                      "Unable to connect!",
-                      key: ValueKey("error"),
-                      style: TextStyle(
-                        color: Colors.red,
-                        fontSize: 16,
-                      ),
-                    )
-                  : const SizedBox.shrink(
-                      key: ValueKey("empty"),
-                    ),
-        ),
-      ),
-    );
-  }
-
-  Future<void> _checkConnection() async {
-    final ok = await controller.checkConnection();
+  Future<void> _tryConnect() async {
+    final ok = await _controller.tryingCredentials();
 
     if (!mounted) return;
 
     if (ok) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Connected successfully")),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text("Connected successfully")));
 
-      // navigate to nex connect section
+      setState(() {
+        state = EspConnect.provide;
+      });
+    }
+  }
+
+  Future<void> _checkConnection() async {
+    await _controller.checkConnection();
+
+    if (!mounted) return;
+
+    if (_controller.state == EspConnectState.connected) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text("Connected successfully")));
+
+      setState(() {
+        state = EspConnect.provide;
+      });
     }
   }
 }
