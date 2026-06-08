@@ -26,12 +26,14 @@ class EspConnectController extends ChangeNotifier {
     super.dispose();
   }
 
-  Future<void> checkConnection() async {
-    if (isLoading) return;
+  Future<bool> checkConnection() async {
+    if (isLoading) return false;
 
     final ok = await EspWifiProvisioning.isConnectedToEspAP();
 
     _setState(ok ? EspConnectState.connected : EspConnectState.fail);
+
+    return ok;
   }
 
   Future<bool> tryingCredentials() async {
