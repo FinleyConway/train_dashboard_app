@@ -2,6 +2,8 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:train_dashboard_app/features/esp_connect/esp_connect_controller.dart';
 import 'package:train_dashboard_app/features/esp_connect/widgets/access_point_card.dart';
+import 'package:train_dashboard_app/features/esp_connect/widgets/connecting_to_network.dart';
+import 'package:train_dashboard_app/features/esp_connect/widgets/connection_flow.dart';
 import 'package:train_dashboard_app/features/esp_connect/widgets/find_access_point.dart';
 import 'package:train_dashboard_app/features/esp_connect/widgets/status_button.dart';
 import 'package:wifi_scan/wifi_scan.dart';
@@ -40,12 +42,7 @@ class _EspConnectPageState extends State<EspConnectPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: Center(
-        child: FindAccessPoint(
-          title: "Find train access point",
-          onAccessPointTap: (ap) {
-            print(ap.ssid);
-          },
-        )
+        child: ConnectionFlow()
       ),
     );
   }
