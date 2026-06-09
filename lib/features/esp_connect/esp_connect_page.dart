@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:train_dashboard_app/features/esp_connect/esp_connect_controller.dart';
 import 'package:train_dashboard_app/features/esp_connect/widgets/access_point_card.dart';
+import 'package:train_dashboard_app/features/esp_connect/widgets/network_permission.dart';
 import 'package:train_dashboard_app/features/esp_connect/widgets/status_button.dart';
 import 'package:wifi_scan/wifi_scan.dart';
 
@@ -42,10 +43,17 @@ class _EspConnectPageState extends State<EspConnectPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24),
-          child: ui(),
+      body: Center(
+        child: NetworkPermission(
+          onPressed: () async {
+            final can = await WiFiScan.instance.canGetScannedResults(
+              askPermissions: true,
+            );
+
+            if (can == CanGetScannedResults.yes) {
+              print("yey!");
+            }
+          },
         ),
       ),
     );
@@ -89,9 +97,7 @@ class _EspConnectPageState extends State<EspConnectPage> {
         _buildTitle("Provide the SSID and password"),
         const SizedBox(height: 16),
 
-        Expanded(
-          child: _buildAccessPointList(accessPoints),
-        ),
+        Expanded(child: _buildAccessPointList(accessPoints)),
 
         const SizedBox(height: 16),
       ],
@@ -122,9 +128,7 @@ class _EspConnectPageState extends State<EspConnectPage> {
   }
 
   Widget _buildAccessPointList(List<WiFiAccessPoint> aps) {
-    final filtered = aps
-        .where((ap) => ap.ssid.isNotEmpty)
-        .toList()
+    final filtered = aps.where((ap) => ap.ssid.isNotEmpty).toList()
       ..sort((a, b) => b.level.compareTo(a.level));
 
     return ListView.separated(
@@ -183,14 +187,17 @@ class _EspConnectPageState extends State<EspConnectPage> {
   }
 
   Future<void> _startListeningToScannedResults() async {
-    final can = await WiFiScan.instance
-        .canGetScannedResults(askPermissions: true);
+    final can = await WiFiScan.instance.canGetScannedResults(
+      askPermissions: true,
+    );
 
     switch (can) {
       case CanGetScannedResults.yes:
         await subscription?.cancel();
 
-        subscription = WiFiScan.instance.onScannedResultsAvailable.listen((results) {
+        subscription = WiFiScan.instance.onScannedResultsAvailable.listen((
+          results,
+        ) {
           if (!mounted) return;
 
           final Map<String, WiFiAccessPoint> unique = {};
@@ -220,9 +227,7 @@ class _EspConnectPageState extends State<EspConnectPage> {
         if (!mounted) return;
 
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text("WiFi scanning not available"),
-          ),
+          const SnackBar(content: Text("WiFi scanning not available")),
         );
         break;
     }
