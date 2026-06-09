@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:train_dashboard_app/features/esp_connect/controllers/wifi_controller.dart';
 
 class NetworkPermission extends StatelessWidget {
-  final VoidCallback? onPressed;
+  final WifiController controller;
+  final VoidCallback onPressed;
 
-  const NetworkPermission({super.key, this.onPressed});
+  const NetworkPermission({super.key, required this.controller, required this.onPressed});
 
   @override
   Widget build(BuildContext context) {
@@ -66,7 +68,7 @@ class NetworkPermission extends StatelessWidget {
     return SizedBox(
       width: double.infinity,
       child: ElevatedButton(
-        onPressed: onPressed,
+        onPressed: _checkPermissions,
         style: ElevatedButton.styleFrom(
           backgroundColor: Colors.black,
           foregroundColor: Colors.white,
@@ -82,5 +84,11 @@ class NetworkPermission extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  Future<void> _checkPermissions() async {
+    if (await controller.hasScanningPermissions()) {
+      onPressed.call();
+    }
   }
 }

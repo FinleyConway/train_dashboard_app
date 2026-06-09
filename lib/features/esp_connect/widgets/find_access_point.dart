@@ -3,38 +3,29 @@ import 'package:train_dashboard_app/features/esp_connect/widgets/access_point/ac
 import 'package:train_dashboard_app/features/esp_connect/controllers/wifi_controller.dart';
 
 class FindAccessPoint extends StatefulWidget {
+  final WifiController controller;
   final String title;
   final Function(String) onAccessPointTap;
   final String? filterName;
 
-  const FindAccessPoint({super.key, required this.title, required this.onAccessPointTap, this.filterName});
+  const FindAccessPoint({super.key, required this.controller, required this.title, required this.onAccessPointTap, this.filterName});
 
   @override
   State<FindAccessPoint> createState() => _FindAccessPointState();
 }
 
 class _FindAccessPointState extends State<FindAccessPoint> {
-  late final WifiController _controller;
-
   @override
   void initState() {
     super.initState();
 
-    _controller = WifiController();
-    _controller.scan();
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-
-    super.dispose();
+    widget.controller.scan(filter: widget.filterName);
   }
 
   @override
   Widget build(BuildContext context) {
     return ListenableBuilder(
-      listenable: _controller, 
+      listenable: widget.controller, 
       builder: (context, _) {
         return Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -47,7 +38,7 @@ class _FindAccessPointState extends State<FindAccessPoint> {
 
               Expanded(
                 child: AccessPointList(
-                  accessPoints: _controller.accessPoints,
+                  accessPoints: widget.controller.accessPoints,
                   onTap: (ap) => setState(() => widget.onAccessPointTap(ap)),
                 ),
               ),
@@ -73,8 +64,8 @@ class _FindAccessPointState extends State<FindAccessPoint> {
     return SizedBox(
       width: double.infinity,
       child: ElevatedButton(
-        onPressed: _controller.isScanning ? null : () {
-          _controller.scan();
+        onPressed: widget.controller.isScanning ? null : () {
+          widget.controller.scan(filter: widget.filterName);
         },
         style: ElevatedButton.styleFrom(
           backgroundColor: Colors.black,

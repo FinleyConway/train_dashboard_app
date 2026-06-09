@@ -15,11 +15,13 @@ class AppHeader extends StatelessWidget implements PreferredSizeWidget {
     return AppBar(
       centerTitle: true,
       title: Text(title),
-      leading: IconButton(
-        icon: const Icon(Icons.arrow_back),
-        onPressed: onBack ?? () => Navigator.maybePop(context),
-      ),
-      actions: [IconButton(icon: const Icon(Icons.close), onPressed: onExit)],
+      leading: onBack != null
+          ? IconButton(icon: const Icon(Icons.arrow_back), onPressed: onBack)
+          : null,
+      actions: [
+        if (onExit != null)
+          IconButton(icon: const Icon(Icons.close), onPressed: onExit),
+      ],
     );
   }
 }
