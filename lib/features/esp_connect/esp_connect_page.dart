@@ -27,6 +27,7 @@ class _EspConnectPageState extends State<EspConnectPage> {
   late final WifiController _wifiController;
 
   EspConnectState _state = EspConnectState.permissionCheck;
+  bool _hasPermission = false;
   String? _selectedSsid;
 
   @override
@@ -65,8 +66,14 @@ class _EspConnectPageState extends State<EspConnectPage> {
     switch (_state) {
       case EspConnectState.permissionCheck:
         return NetworkPermission(
-          onPressed: () {
+          onPressed: () async {
+            if (_hasPermission) {
               setState(() => _state = EspConnectState.findAccessPoint);
+            }
+            
+            if (await _wifiController.hasScanningPermissions()) {
+              setState(() => _state = EspConnectState.findAccessPoint);
+            }
           }
         );
 
@@ -96,14 +103,14 @@ class _EspConnectPageState extends State<EspConnectPage> {
   }
 
   Future<void> _checkPermissions() async {
-    final hasPermission = await _wifiController.hasScanningPermissions(
+    _hasPermission = await _wifiController.hasScanningPermissions(
       ask: false,
     );
 
     if (!mounted) return;
 
     setState(() {
-      _state = hasPermission
+      _state = _hasPermission
           ? EspConnectState.findAccessPoint
           : EspConnectState.permissionCheck;
     });
