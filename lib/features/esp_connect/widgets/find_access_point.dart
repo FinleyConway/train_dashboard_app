@@ -3,18 +3,18 @@ import 'package:train_dashboard_app/features/esp_connect/widgets/access_point_li
 import 'package:train_dashboard_app/features/esp_connect/wifi_scan_controller.dart';
 import 'package:wifi_scan/wifi_scan.dart';
 
-class FindTrainAccessPoint extends StatefulWidget {
+class FindAccessPoint extends StatefulWidget {
   final String title;
   final Function(WiFiAccessPoint) onAccessPointTap;
   final String? filterName;
 
-  const FindTrainAccessPoint({super.key, required this.title, required this.onAccessPointTap, this.filterName});
+  const FindAccessPoint({super.key, required this.title, required this.onAccessPointTap, this.filterName});
 
   @override
-  State<FindTrainAccessPoint> createState() => _FindTrainAccessPointState();
+  State<FindAccessPoint> createState() => _FindAccessPointState();
 }
 
-class _FindTrainAccessPointState extends State<FindTrainAccessPoint> {
+class _FindAccessPointState extends State<FindAccessPoint> {
   late final WifiScanController _controller;
 
   @override
