@@ -6,6 +6,16 @@ class NetworkPermission extends StatelessWidget {
   const NetworkPermission({super.key, this.onPressed});
 
   @override
+  void initState() {
+
+  }
+
+  @override
+  void dispose() {
+    
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),

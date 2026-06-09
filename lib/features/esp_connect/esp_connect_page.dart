@@ -2,7 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:train_dashboard_app/features/esp_connect/esp_connect_controller.dart';
 import 'package:train_dashboard_app/features/esp_connect/widgets/access_point_card.dart';
-import 'package:train_dashboard_app/features/esp_connect/widgets/network_permission.dart';
+import 'package:train_dashboard_app/features/esp_connect/widgets/find_train_access_point.dart';
 import 'package:train_dashboard_app/features/esp_connect/widgets/status_button.dart';
 import 'package:wifi_scan/wifi_scan.dart';
 
@@ -19,9 +19,6 @@ class _EspConnectPageState extends State<EspConnectPage> {
   late final EspConnectController _controller;
   EspConnect state = EspConnect.connect;
 
-  List<WiFiAccessPoint> accessPoints = [];
-  StreamSubscription<List<WiFiAccessPoint>>? subscription;
-
   @override
   void initState() {
     super.initState();
@@ -35,7 +32,6 @@ class _EspConnectPageState extends State<EspConnectPage> {
 
   @override
   void dispose() {
-    subscription?.cancel();
     _controller.dispose();
     super.dispose();
   }
@@ -44,30 +40,14 @@ class _EspConnectPageState extends State<EspConnectPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: Center(
-        child: NetworkPermission(
-          onPressed: () async {
-            final can = await WiFiScan.instance.canGetScannedResults(
-              askPermissions: true,
-            );
-
-            if (can == CanGetScannedResults.yes) {
-              print("yey!");
-            }
+        child: FindTrainAccessPoint(
+          title: "Find train access point",
+          onAccessPointTap: (ap) {
+            print(ap.ssid);
           },
-        ),
+        )
       ),
     );
-  }
-
-  Widget ui() {
-    switch (state) {
-      case EspConnect.connect:
-        return _connect();
-      case EspConnect.provide:
-        return _provide();
-      case EspConnect.connected:
-        return _connected();
-    }
   }
 
   Widget _connect() {
@@ -85,21 +65,6 @@ class _EspConnectPageState extends State<EspConnectPage> {
           errorText: "Unable to connect!",
           onPressed: _checkConnection,
         ),
-      ],
-    );
-  }
-
-  Widget _provide() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        const SizedBox(height: 24),
-        _buildTitle("Provide the SSID and password"),
-        const SizedBox(height: 16),
-
-        Expanded(child: _buildAccessPointList(accessPoints)),
-
-        const SizedBox(height: 16),
       ],
     );
   }
@@ -180,56 +145,7 @@ class _EspConnectPageState extends State<EspConnectPage> {
 
       setState(() {
         state = EspConnect.provide;
-
-        _startListeningToScannedResults();
       });
-    }
-  }
-
-  Future<void> _startListeningToScannedResults() async {
-    final can = await WiFiScan.instance.canGetScannedResults(
-      askPermissions: true,
-    );
-
-    switch (can) {
-      case CanGetScannedResults.yes:
-        await subscription?.cancel();
-
-        subscription = WiFiScan.instance.onScannedResultsAvailable.listen((
-          results,
-        ) {
-          if (!mounted) return;
-
-          final Map<String, WiFiAccessPoint> unique = {};
-
-          for (final ap in results) {
-            if (ap.ssid.isEmpty) continue;
-
-            final existing = unique[ap.ssid];
-
-            if (existing == null || ap.level > existing.level) {
-              unique[ap.ssid] = ap;
-            }
-          }
-
-          setState(() {
-            accessPoints = unique.values.toList()
-              ..sort((a, b) => b.level.compareTo(a.level));
-          });
-        });
-        break;
-
-      case CanGetScannedResults.noLocationServiceDisabled:
-      case CanGetScannedResults.noLocationPermissionUpgradeAccuracy:
-      case CanGetScannedResults.noLocationPermissionDenied:
-      case CanGetScannedResults.notSupported:
-      case CanGetScannedResults.noLocationPermissionRequired:
-        if (!mounted) return;
-
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("WiFi scanning not available")),
-        );
-        break;
     }
   }
 }
