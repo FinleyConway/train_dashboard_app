@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:train_dashboard_app/features/esp_connect/widgets/access_point_list.dart';
-import 'package:train_dashboard_app/features/esp_connect/wifi_scan_controller.dart';
-import 'package:wifi_scan/wifi_scan.dart';
+import 'package:train_dashboard_app/features/esp_connect/widgets/access_point/access_point_list.dart';
+import 'package:train_dashboard_app/features/esp_connect/controllers/wifi_controller.dart';
 
 class FindAccessPoint extends StatefulWidget {
   final String title;
-  final Function(WiFiAccessPoint) onAccessPointTap;
+  final Function(String) onAccessPointTap;
   final String? filterName;
 
   const FindAccessPoint({super.key, required this.title, required this.onAccessPointTap, this.filterName});
@@ -15,13 +14,13 @@ class FindAccessPoint extends StatefulWidget {
 }
 
 class _FindAccessPointState extends State<FindAccessPoint> {
-  late final WifiScanController _controller;
+  late final WifiController _controller;
 
   @override
   void initState() {
     super.initState();
 
-    _controller = WifiScanController();
+    _controller = WifiController();
     _controller.scan();
   }
 

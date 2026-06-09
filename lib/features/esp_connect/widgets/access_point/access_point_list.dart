@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:wifi_scan/wifi_scan.dart';
-import 'package:train_dashboard_app/features/esp_connect/widgets/access_point_card.dart';
+import 'package:train_dashboard_app/features/esp_connect/widgets/access_point/access_point_card.dart';
 
 class AccessPointList extends StatelessWidget {
   final List<WiFiAccessPoint> accessPoints;
-  final void Function(WiFiAccessPoint)? onTap;
+  final void Function(String)? onTap;
 
   const AccessPointList({super.key, required this.accessPoints, this.onTap});
 
@@ -23,7 +23,7 @@ class AccessPointList extends StatelessWidget {
           level: ap.level, 
           ssid: ap.ssid, 
           isOpen: ap.capabilities.contains('WPA') == false,
-          onTap: () => onTap?.call(ap),
+          onTap: () => onTap?.call(ap.ssid),
         );
       }
     );

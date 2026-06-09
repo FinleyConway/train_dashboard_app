@@ -1,14 +1,19 @@
-import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:train_dashboard_app/features/esp_connect/esp_connect_controller.dart';
-import 'package:train_dashboard_app/features/esp_connect/widgets/access_point_card.dart';
+import 'package:train_dashboard_app/features/esp_connect/controllers/esp_connect_controller.dart';
+import 'package:train_dashboard_app/features/esp_connect/controllers/wifi_controller.dart';
+import 'package:train_dashboard_app/features/esp_connect/widgets/connect_to_network.dart';
 import 'package:train_dashboard_app/features/esp_connect/widgets/connecting_to_network.dart';
-import 'package:train_dashboard_app/features/esp_connect/widgets/connection_flow.dart';
 import 'package:train_dashboard_app/features/esp_connect/widgets/find_access_point.dart';
-import 'package:train_dashboard_app/features/esp_connect/widgets/status_button.dart';
-import 'package:wifi_scan/wifi_scan.dart';
+import 'package:train_dashboard_app/features/esp_connect/widgets/network_permission.dart';
+import 'package:train_dashboard_app/features/widgets/app_header.dart';
 
-enum EspConnect { connect, provide, connected }
+enum EspConnectState {
+  permissionCheck,
+  findAccessPoint,
+  selectNetwork,
+  connecting,
+  connected,
+}
 
 class EspConnectPage extends StatefulWidget {
   const EspConnectPage({super.key});
@@ -18,131 +23,89 @@ class EspConnectPage extends StatefulWidget {
 }
 
 class _EspConnectPageState extends State<EspConnectPage> {
-  late final EspConnectController _controller;
-  EspConnect state = EspConnect.connect;
+  late final EspConnectController _espController;
+  late final WifiController _wifiController;
+
+  EspConnectState _state = EspConnectState.permissionCheck;
+  String? _selectedSsid;
 
   @override
   void initState() {
     super.initState();
-    _controller = EspConnectController();
 
-    _controller.addListener(() {
-      if (!mounted) return;
-      setState(() {});
-    });
+    _espController = EspConnectController();
+    _wifiController = WifiController();
+
+    _checkPermissions();
   }
 
   @override
   void dispose() {
-    _controller.dispose();
+    _espController.dispose();
+    _wifiController.dispose();
+
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Center(
-        child: ConnectionFlow()
+      appBar: AppHeader(title: "Setup Train"),
+      body: AnimatedSwitcher(
+        duration: const Duration(milliseconds: 300),
+        child: KeyedSubtree(
+          key: ValueKey(_state),
+          child: _buildState(),
+        ),
       ),
     );
   }
 
-  Widget _connect() {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        const Icon(Icons.wifi, size: 100),
-        const SizedBox(height: 32),
-        _buildTitle("Connect to the train's access point"),
-        const SizedBox(height: 64),
-        StatusButton(
-          label: "Begin",
-          isLoading: _controller.isLoading,
-          isError: _controller.isError,
-          errorText: "Unable to connect!",
-          onPressed: _checkConnection,
-        ),
-      ],
-    );
-  }
+  Widget _buildState() {
+    switch (_state) {
+      case EspConnectState.permissionCheck:
+        return NetworkPermission(
+          onPressed: () {
+              setState(() => _state = EspConnectState.findAccessPoint);
+          }
+        );
 
-  Widget _connected() {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: const [
-        Icon(Icons.check, size: 100),
-        SizedBox(height: 16),
-        Text(
-          "Train is connected to the network!",
-          textAlign: TextAlign.center,
-          style: TextStyle(fontSize: 20),
-        ),
-      ],
-    );
-  }
+      case EspConnectState.findAccessPoint:
+        return FindAccessPoint(
+          title: "Select a train",
+          onAccessPointTap: (String ssid) {
+              setState(() => _state = EspConnectState.selectNetwork);
+          },
+          filterName: "esp_device", // make a config class later?
+        );
 
-  Widget _buildTitle(String label) {
-    return Text(
-      label,
-      textAlign: TextAlign.center,
-      style: const TextStyle(fontSize: 20),
-    );
-  }
-
-  Widget _buildAccessPointList(List<WiFiAccessPoint> aps) {
-    final filtered = aps.where((ap) => ap.ssid.isNotEmpty).toList()
-      ..sort((a, b) => b.level.compareTo(a.level));
-
-    return ListView.separated(
-      itemCount: filtered.length,
-      separatorBuilder: (_, __) => const SizedBox(height: 8),
-      itemBuilder: (context, index) {
-        final ap = filtered[index];
-
-        //final isSelected = selectedAp?.ssid == ap.ssid;
-
-        return AccessPointCard(
-          level: ap.level,
-          ssid: ap.ssid,
-          isOpen: !ap.capabilities.toUpperCase().contains('WPA'),
-          onTap: () {
-            //setState(() => selectedAp = ap);
-            print(ap.ssid);
+      case EspConnectState.selectNetwork:
+        return ConnectToNetwork(
+          ssid: _selectedSsid!,
+          onTryConnect: (String ssid, String password) { 
+            setState(() => _state = EspConnectState.connecting);
           },
         );
-      },
+
+      case EspConnectState.connecting:
+        return ConnectingToNetwork();
+
+      case EspConnectState.connected:
+        return const Center(child: Text('Connected'));
+    }
+  }
+
+  Future<void> _checkPermissions() async {
+    final hasPermission = await _wifiController.hasScanningPermissions(
+      ask: false,
     );
-  }
-
-  Future<void> _tryConnect() async {
-    final ok = await _controller.tryingCredentials();
 
     if (!mounted) return;
 
-    if (ok) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text("Connected successfully")));
-
-      setState(() {
-        state = EspConnect.connected;
-      });
-    }
-  }
-
-  Future<void> _checkConnection() async {
-    final ok = await _controller.checkConnection();
-
-    if (!mounted) return;
-
-    if (ok) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text("Connected successfully")));
-
-      setState(() {
-        state = EspConnect.provide;
-      });
-    }
+    setState(() {
+      _state = hasPermission
+          ? EspConnectState.findAccessPoint
+          : EspConnectState.permissionCheck;
+    });
   }
 }

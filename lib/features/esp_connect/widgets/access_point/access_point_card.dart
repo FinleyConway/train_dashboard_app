@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:train_dashboard_app/features/esp_connect/widgets/wifi_signal_icon.dart';
+import 'package:train_dashboard_app/features/esp_connect/widgets/access_point/wifi_signal_icon.dart';
 
 class AccessPointCard extends StatelessWidget {
   final int level;
@@ -18,7 +18,7 @@ class AccessPointCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
-      clipBehavior: Clip.antiAlias, // ensures ripple stays inside card
+      clipBehavior: Clip.antiAlias, 
       child: InkWell(
         onTap: onTap,
         child: Padding(

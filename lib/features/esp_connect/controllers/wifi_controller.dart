@@ -2,7 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:wifi_scan/wifi_scan.dart';
 
-class WifiScanController extends ChangeNotifier {
+class WifiController extends ChangeNotifier {
   List<WiFiAccessPoint> get accessPoints => _accessPoints;
   bool get isScanning => _isScanning;
 
@@ -10,8 +10,8 @@ class WifiScanController extends ChangeNotifier {
   bool _isScanning = false;
   final WiFiScan _wifi = WiFiScan.instance;
 
-  Future<bool> hasScanningPermissions() async {
-    final can = await WiFiScan.instance.canGetScannedResults();
+  Future<bool> hasScanningPermissions({bool ask = true}) async {
+    final can = await WiFiScan.instance.canGetScannedResults(askPermissions: ask);
 
     return can == CanGetScannedResults.yes;
   }
