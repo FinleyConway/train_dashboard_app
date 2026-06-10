@@ -4,9 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:train_dashboard_app/core/network/esp_wifi_provisioning.dart';
 
 class EspConnectController extends ChangeNotifier {
-  final TextEditingController ssidController = TextEditingController();
-  final TextEditingController passwordController = TextEditingController();
-
   EspConnectState get state => _state;
   bool get isSuccess => _state == EspConnectState.connected;
   bool get isLoading => _state == EspConnectState.connecting;
@@ -18,13 +15,6 @@ class EspConnectController extends ChangeNotifier {
   EspConnectState _state = EspConnectState.idle;
   final _maxAttempts = 10;
   final _frequency = const Duration(seconds: 1);
-
-  @override
-  void dispose() {
-    ssidController.dispose();
-    passwordController.dispose();
-    super.dispose();
-  }
 
   Future<bool> checkConnection() async {
     if (isLoading) return false;
@@ -38,13 +28,10 @@ class EspConnectController extends ChangeNotifier {
     return ok;
   }
 
-  Future<bool> tryingCredentials() async {
+  Future<bool> tryCredentials(String ssid, String password) async {
     if (isLoading) return false;
 
     _setState(EspConnectState.connecting);
-
-    final ssid = ssidController.text;
-    final password = passwordController.text;
 
     if (ssid.isEmpty) {
       _setState(EspConnectState.badCredentials);

@@ -32,7 +32,6 @@ class _EspConnectPageState extends State<EspConnectPage> {
   EspConnectState? _previousState; 
 
   bool _hasPermission = false;
-  String? _selectedTrainSsid;
   String? _selectedNetworkSsid;
 
   @override

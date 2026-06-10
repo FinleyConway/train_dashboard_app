@@ -120,6 +120,7 @@ class _ConnectToNetworkState extends State<ConnectToNetwork> {
     // }
 
     setState(() => _isError = false);
+
     widget.onTryConnect.call(
       _ssidController.text,
       _passwordController.text

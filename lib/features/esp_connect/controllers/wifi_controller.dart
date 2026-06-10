@@ -37,8 +37,8 @@ class WifiController extends ChangeNotifier {
     }).toList();
 
     _accessPoints = filter == null
-      ? cleanResults
-      : cleanResults.where((ap) => !ap.ssid.contains(filter)).toList();
+        ? cleanResults
+        : cleanResults.where((ap) => !ap.ssid.contains(filter)).toList();
 
     _isScanning = false;
 
@@ -46,8 +46,6 @@ class WifiController extends ChangeNotifier {
   }
 
   void openWifiSettings() {
-    AppSettings.openAppSettings(
-      type: AppSettingsType.wifi,
-    );
+    AppSettings.openAppSettings(type: AppSettingsType.wifi);
   }
 }

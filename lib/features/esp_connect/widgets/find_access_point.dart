@@ -8,7 +8,13 @@ class FindAccessPoint extends StatefulWidget {
   final Function(String) onAccessPointTap;
   final String? filterName;
 
-  const FindAccessPoint({super.key, required this.controller, required this.title, required this.onAccessPointTap, this.filterName});
+  const FindAccessPoint({
+    super.key,
+    required this.controller,
+    required this.title,
+    required this.onAccessPointTap,
+    this.filterName,
+  });
 
   @override
   State<FindAccessPoint> createState() => _FindAccessPointState();
@@ -25,7 +31,7 @@ class _FindAccessPointState extends State<FindAccessPoint> {
   @override
   Widget build(BuildContext context) {
     return ListenableBuilder(
-      listenable: widget.controller, 
+      listenable: widget.controller,
       builder: (context, _) {
         return Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -46,10 +52,10 @@ class _FindAccessPointState extends State<FindAccessPoint> {
               _buildRefreshButton(),
 
               const SizedBox(height: 80),
-            ]
-          )
+            ],
+          ),
         );
-      }
+      },
     );
   }
 
@@ -64,9 +70,11 @@ class _FindAccessPointState extends State<FindAccessPoint> {
     return SizedBox(
       width: double.infinity,
       child: ElevatedButton(
-        onPressed: widget.controller.isScanning ? null : () {
-          widget.controller.scan(filter: widget.filterName);
-        },
+        onPressed: widget.controller.isScanning
+            ? null
+            : () {
+                widget.controller.scan(filter: widget.filterName);
+              },
         style: ElevatedButton.styleFrom(
           backgroundColor: Colors.black,
           foregroundColor: Colors.white,
