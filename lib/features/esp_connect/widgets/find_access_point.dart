@@ -32,9 +32,9 @@ class _FindAccessPointState extends State<FindAccessPoint> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const SizedBox(height: 64),
-
               _buildTitle(),
+
+              const SizedBox(height: 32),
 
               Expanded(
                 child: AccessPointList(

@@ -29,6 +29,8 @@ class EspConnectController extends ChangeNotifier {
   Future<bool> checkConnection() async {
     if (isLoading) return false;
 
+    _setState(EspConnectState.connecting);
+
     final ok = await EspWifiProvisioning.isConnectedToEspAP();
 
     _setState(ok ? EspConnectState.connected : EspConnectState.fail);

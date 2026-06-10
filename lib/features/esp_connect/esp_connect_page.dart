@@ -3,6 +3,7 @@ import 'package:train_dashboard_app/features/esp_connect/controllers/esp_connect
 import 'package:train_dashboard_app/features/esp_connect/controllers/wifi_controller.dart';
 import 'package:train_dashboard_app/features/esp_connect/widgets/connect_to_network.dart';
 import 'package:train_dashboard_app/features/esp_connect/widgets/connecting_to_network.dart';
+import 'package:train_dashboard_app/features/esp_connect/widgets/direct_wifi_menu.dart';
 import 'package:train_dashboard_app/features/esp_connect/widgets/find_access_point.dart';
 import 'package:train_dashboard_app/features/esp_connect/widgets/network_permission.dart';
 import 'package:train_dashboard_app/features/widgets/app_header.dart';
@@ -31,7 +32,8 @@ class _EspConnectPageState extends State<EspConnectPage> {
   EspConnectState? _previousState; 
 
   bool _hasPermission = false;
-  String? _selectedSsid;
+  String? _selectedTrainSsid;
+  String? _selectedNetworkSsid;
 
   @override
   void initState() {
@@ -86,16 +88,15 @@ class _EspConnectPageState extends State<EspConnectPage> {
         );
 
       case EspConnectState.findTrainAccessPoint:
-        return FindAccessPoint(
-          controller: _wifiController,
-          title: "Select a train",
-          onAccessPointTap: (String ssid) {
+        return DirectWifiMenu(
+          wifiController: _wifiController,
+          espController: _espController,
+          onPressed: () {
               setState(() { 
                 _previousState = _state;
                 _state = EspConnectState.findWifiAccessPoint;
               });
           },
-          //filterName: "esp_device", // make a config class later?
         );
 
       case EspConnectState.findWifiAccessPoint:
@@ -103,18 +104,19 @@ class _EspConnectPageState extends State<EspConnectPage> {
           controller: _wifiController,
           title: "Select a WiFi network",
           onAccessPointTap: (String ssid) {
-              _selectedSsid = ssid;
+              _selectedNetworkSsid = ssid;
 
               setState(() { 
                 _previousState = _state;
                 _state = EspConnectState.selectNetwork;
               });
           },
+          filterName: "esp_device",
         );
 
       case EspConnectState.selectNetwork:
         return ConnectToNetwork(
-          ssid: _selectedSsid!,
+          ssid: _selectedNetworkSsid!,
           onTryConnect: (String ssid, String password) { 
             setState(() {
               _previousState = null;

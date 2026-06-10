@@ -36,8 +36,6 @@ class _ConnectToNetworkState extends State<ConnectToNetwork> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const SizedBox(height: 64),
-
           _buildTitle(),
 
           const SizedBox(height: 24),

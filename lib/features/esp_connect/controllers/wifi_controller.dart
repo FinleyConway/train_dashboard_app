@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:app_settings/app_settings.dart';
 import 'package:flutter/material.dart';
 import 'package:wifi_scan/wifi_scan.dart';
 
@@ -11,9 +12,9 @@ class WifiController extends ChangeNotifier {
   final WiFiScan _wifi = WiFiScan.instance;
 
   Future<bool> hasScanningPermissions({bool ask = true}) async {
-    final can = await WiFiScan.instance.canGetScannedResults(askPermissions: ask);
+    final can = await WiFiScan.instance.canStartScan(askPermissions: ask);
 
-    return can == CanGetScannedResults.yes;
+    return can == CanStartScan.yes;
   }
 
   Future<void> scan({String? filter}) async {
@@ -37,10 +38,16 @@ class WifiController extends ChangeNotifier {
 
     _accessPoints = filter == null
       ? cleanResults
-      : cleanResults.where((ap) => ap.ssid.contains(filter)).toList();
+      : cleanResults.where((ap) => !ap.ssid.contains(filter)).toList();
 
     _isScanning = false;
 
     notifyListeners();
+  }
+
+  void openWifiSettings() {
+    AppSettings.openAppSettings(
+      type: AppSettingsType.wifi,
+    );
   }
 }
