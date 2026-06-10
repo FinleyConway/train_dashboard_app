@@ -58,9 +58,18 @@ class _EspConnectPageState extends State<EspConnectPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppHeader(title: "Setup Train", onBack: _goBack),
-      body: AnimatedSwitcher(
-        duration: const Duration(milliseconds: 300),
-        child: KeyedSubtree(key: ValueKey(_state), child: _buildState()),
+      body: LayoutBuilder(
+        builder: (context, constraints) => SizedBox(
+          width: constraints.maxWidth,
+          height: constraints.maxHeight,
+          child: AnimatedSwitcher(
+            duration: const Duration(milliseconds: 300),
+            child: KeyedSubtree(
+              key: ValueKey(_state),
+              child: _buildState(),
+            ),
+          ),
+        ),
       ),
     );
   }
@@ -164,11 +173,10 @@ class _EspConnectPageState extends State<EspConnectPage> {
   }
 
   void _parseConnectionError() {
-    _connectionError = switch(_espController.state) {
+    _connectionError = switch (_espController.state) {
       EspConnectState.badCredentials => "Incorrect credentials, try again!",
       EspConnectState.timeout => "Connection timed out!",
       _ => "",
     };
-
   }
 }

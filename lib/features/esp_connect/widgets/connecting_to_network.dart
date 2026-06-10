@@ -1,32 +1,29 @@
 import 'package:flutter/material.dart';
 
 class ConnectingToNetwork extends StatelessWidget {
-  
   const ConnectingToNetwork({super.key});
 
-  @override 
+  @override
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.max,
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          const Spacer(),
-
           const Icon(Icons.wifi, size: 64),
 
           const SizedBox(height: 24),
 
           const Text(
-            'Connecting',
+            "Connecting...",
             style: TextStyle(fontSize: 28, fontWeight: FontWeight.w600),
           ),
 
-          const SizedBox(height: 32),
+          const SizedBox(height: 128),
 
           const CircularProgressIndicator(),
-
-          const Spacer(),
         ],
       ),
     );
