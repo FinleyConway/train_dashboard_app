@@ -66,7 +66,7 @@ class EspWifiProvisioning {
     } on TimeoutException {
       return EspConnectState.timeout;
     } catch (_) {
-      return EspConnectState.fail;
+      return EspConnectState.lostConnection;
     }
   }
 

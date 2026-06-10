@@ -2,9 +2,10 @@ import 'package:flutter/material.dart';
 
 class ConnectToNetwork extends StatefulWidget {
   final String? ssid;
+  final String? errorMessage;
   final Function(String, String) onTryConnect;
 
-  const ConnectToNetwork({super.key, required this.onTryConnect, this.ssid});
+  const ConnectToNetwork({super.key, required this.onTryConnect, this.ssid, this.errorMessage});
 
   @override
   State<ConnectToNetwork> createState() => _ConnectToNetworkState();
@@ -14,7 +15,6 @@ class _ConnectToNetworkState extends State<ConnectToNetwork> {
   late final TextEditingController _ssidController;
   late final TextEditingController _passwordController;
   bool _obscurePassword = true;
-  bool _isError = false;
 
   @override
   void initState() {
@@ -75,6 +75,20 @@ class _ConnectToNetworkState extends State<ConnectToNetwork> {
           const Spacer(),
 
           _buildConnectButton(),
+          
+          if (widget.errorMessage != null) ...[
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                const Icon(Icons.error_outline, size: 16, color: Colors.red),
+                const SizedBox(width: 6),
+                Text(
+                  widget.errorMessage!,
+                  style: const TextStyle(fontSize: 13, color: Colors.red),
+                ),
+              ],
+            ),
+          ],
 
           const SizedBox(height: 80),
         ]
@@ -112,16 +126,6 @@ class _ConnectToNetworkState extends State<ConnectToNetwork> {
   }
 
   void _onConnect() {
-    // if (_ssidController.text.isEmpty) {
-    //   setState(() {
-    //     _isError = true;
-    //     _errorMessage = 'Please enter a password';
-    //   });
-    //   return;
-    // }
-
-    setState(() => _isError = false);
-
     widget.onTryConnect.call(
       _ssidController.text,
       _passwordController.text

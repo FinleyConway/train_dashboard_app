@@ -46,10 +46,22 @@ class DirectWifiMenu extends StatelessWidget {
               StatusButton(
                 label: "Check connection",
                 isLoading: espController.isLoading,
-                isError: espController.isError,
-                errorText: "Not connected to train!",
                 onPressed: _onCheckConnection,
               ),
+
+              if (espController.isError) ...[
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    const Icon(Icons.error_outline, size: 16, color: Colors.red),
+                    const SizedBox(width: 6),
+                    const Text(
+                      "Not connected to train!",
+                      style: TextStyle(fontSize: 13, color: Colors.red),
+                    ),
+                  ],
+                ),
+              ],
 
               const SizedBox(height: 80),
             ],

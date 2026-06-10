@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:train_dashboard_app/core/network/esp_wifi_provisioning.dart';
 import 'package:train_dashboard_app/features/esp_connect/controllers/esp_connect_controller.dart';
 import 'package:train_dashboard_app/features/esp_connect/controllers/wifi_controller.dart';
 import 'package:train_dashboard_app/features/esp_connect/widgets/connect_to_network.dart';
@@ -8,7 +9,7 @@ import 'package:train_dashboard_app/features/esp_connect/widgets/find_access_poi
 import 'package:train_dashboard_app/features/esp_connect/widgets/network_permission.dart';
 import 'package:train_dashboard_app/features/widgets/app_header.dart';
 
-enum EspConnectState {
+enum EspConnectPageState {
   permissionCheck,
   findTrainAccessPoint,
   findWifiAccessPoint,
@@ -28,11 +29,12 @@ class _EspConnectPageState extends State<EspConnectPage> {
   late final EspConnectController _espController;
   late final WifiController _wifiController;
 
-  EspConnectState _state = EspConnectState.permissionCheck;
-  EspConnectState? _previousState;
+  EspConnectPageState _state = EspConnectPageState.permissionCheck;
+  EspConnectPageState? _previousState;
 
   bool _hasPermission = false;
   String? _selectedNetworkSsid;
+  String? _connectionError;
 
   @override
   void initState() {
@@ -65,34 +67,34 @@ class _EspConnectPageState extends State<EspConnectPage> {
 
   Widget _buildState() {
     switch (_state) {
-      case EspConnectState.permissionCheck:
+      case EspConnectPageState.permissionCheck:
         // just move on to the next state if perms are set
         if (_hasPermission) {
-          setState(() => _state = EspConnectState.findTrainAccessPoint);
+          setState(() => _state = EspConnectPageState.findTrainAccessPoint);
         }
 
         return NetworkPermission(
           controller: _wifiController,
           onPressed: () async {
             setState(() {
-              _state = EspConnectState.findTrainAccessPoint;
+              _state = EspConnectPageState.findTrainAccessPoint;
             });
           },
         );
 
-      case EspConnectState.findTrainAccessPoint:
+      case EspConnectPageState.findTrainAccessPoint:
         return DirectWifiMenu(
           wifiController: _wifiController,
           espController: _espController,
           onPressed: () {
             setState(() {
               _previousState = _state;
-              _state = EspConnectState.findWifiAccessPoint;
+              _state = EspConnectPageState.findWifiAccessPoint;
             });
           },
         );
 
-      case EspConnectState.findWifiAccessPoint:
+      case EspConnectPageState.findWifiAccessPoint:
         return FindAccessPoint(
           controller: _wifiController,
           title: "Select a WiFi network",
@@ -101,34 +103,42 @@ class _EspConnectPageState extends State<EspConnectPage> {
 
             setState(() {
               _previousState = _state;
-              _state = EspConnectState.selectNetwork;
+              _state = EspConnectPageState.selectNetwork;
             });
           },
           filterName: "esp_device",
         );
 
-      case EspConnectState.selectNetwork:
+      case EspConnectPageState.selectNetwork:
         return ConnectToNetwork(
           ssid: _selectedNetworkSsid!,
+          errorMessage: _connectionError,
           onTryConnect: (String ssid, String password) {
-            setState(() => _state = EspConnectState.connecting);
+            setState(() {
+              _state = EspConnectPageState.connecting;
+              _connectionError = null;
+            });
 
             _espController.tryCredentials(ssid, password).then((ok) {
               if (!mounted) return;
 
               if (ok) {
-                setState(() => _state = EspConnectState.connected);
+                setState(() => _state = EspConnectPageState.connected);
               } else {
-                setState(() => _state = EspConnectState.selectNetwork);
+                setState(() {
+                  _state = EspConnectPageState.selectNetwork;
+
+                  _parseConnectionError();
+                });
               }
             });
           },
         );
 
-      case EspConnectState.connecting:
+      case EspConnectPageState.connecting:
         return ConnectingToNetwork();
 
-      case EspConnectState.connected:
+      case EspConnectPageState.connected:
         return const Center(child: Text('Connected'));
     }
   }
@@ -148,8 +158,17 @@ class _EspConnectPageState extends State<EspConnectPage> {
 
     setState(() {
       _state = _hasPermission
-          ? EspConnectState.findTrainAccessPoint
-          : EspConnectState.permissionCheck;
+          ? EspConnectPageState.findTrainAccessPoint
+          : EspConnectPageState.permissionCheck;
     });
+  }
+
+  void _parseConnectionError() {
+    _connectionError = switch(_espController.state) {
+      EspConnectState.badCredentials => "Incorrect credentials, try again!",
+      EspConnectState.timeout => "Connection timed out!",
+      _ => "",
+    };
+
   }
 }

@@ -3,25 +3,18 @@ import 'package:flutter/material.dart';
 class StatusButton extends StatelessWidget {
   final String label;
   final bool isLoading;
-  final bool isError;
-  final String errorText;
   final VoidCallback? onPressed;
-  
+
   const StatusButton({
     super.key,
     required this.label,
     required this.isLoading,
-    required this.isError,
-    required this.errorText,
     required this.onPressed,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [_createButton(), const SizedBox(height: 16), _createError()],
-    );
+    return Column(mainAxisSize: MainAxisSize.min, children: [_createButton()]);
   }
 
   Widget _createButton() {
@@ -60,25 +53,6 @@ class StatusButton extends StatelessWidget {
                     ),
                   ),
           ),
-        ),
-      ),
-    );
-  }
-
-  Widget _createError() {
-    return SizedBox(
-      height: 40,
-      child: Center(
-        child: AnimatedSwitcher(
-          duration: const Duration(milliseconds: 200),
-          child: isError
-              ? Text(
-                  errorText,
-                  key: const ValueKey("error"),
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(color: Colors.red, fontSize: 14),
-                )
-              : const SizedBox.shrink(key: ValueKey("empty")),
         ),
       ),
     );
