@@ -29,7 +29,7 @@ class _EspConnectPageState extends State<EspConnectPage> {
   late final WifiController _wifiController;
 
   EspConnectState _state = EspConnectState.permissionCheck;
-  EspConnectState? _previousState; 
+  EspConnectState? _previousState;
 
   bool _hasPermission = false;
   String? _selectedNetworkSsid;
@@ -55,16 +55,10 @@ class _EspConnectPageState extends State<EspConnectPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppHeader(
-        title: "Setup Train",
-        onBack: _goBack,
-      ),
+      appBar: AppHeader(title: "Setup Train", onBack: _goBack),
       body: AnimatedSwitcher(
         duration: const Duration(milliseconds: 300),
-        child: KeyedSubtree(
-          key: ValueKey(_state),
-          child: _buildState(),
-        ),
+        child: KeyedSubtree(key: ValueKey(_state), child: _buildState()),
       ),
     );
   }
@@ -81,9 +75,9 @@ class _EspConnectPageState extends State<EspConnectPage> {
           controller: _wifiController,
           onPressed: () async {
             setState(() {
-                _state = EspConnectState.findTrainAccessPoint;
+              _state = EspConnectState.findTrainAccessPoint;
             });
-          }
+          },
         );
 
       case EspConnectState.findTrainAccessPoint:
@@ -91,10 +85,10 @@ class _EspConnectPageState extends State<EspConnectPage> {
           wifiController: _wifiController,
           espController: _espController,
           onPressed: () {
-              setState(() { 
-                _previousState = _state;
-                _state = EspConnectState.findWifiAccessPoint;
-              });
+            setState(() {
+              _previousState = _state;
+              _state = EspConnectState.findWifiAccessPoint;
+            });
           },
         );
 
@@ -103,12 +97,12 @@ class _EspConnectPageState extends State<EspConnectPage> {
           controller: _wifiController,
           title: "Select a WiFi network",
           onAccessPointTap: (String ssid) {
-              _selectedNetworkSsid = ssid;
+            _selectedNetworkSsid = ssid;
 
-              setState(() { 
-                _previousState = _state;
-                _state = EspConnectState.selectNetwork;
-              });
+            setState(() {
+              _previousState = _state;
+              _state = EspConnectState.selectNetwork;
+            });
           },
           filterName: "esp_device",
         );
@@ -116,10 +110,17 @@ class _EspConnectPageState extends State<EspConnectPage> {
       case EspConnectState.selectNetwork:
         return ConnectToNetwork(
           ssid: _selectedNetworkSsid!,
-          onTryConnect: (String ssid, String password) { 
-            setState(() {
-              _previousState = null;
-              _state = EspConnectState.connecting;
+          onTryConnect: (String ssid, String password) {
+            setState(() => _state = EspConnectState.connecting);
+
+            _espController.tryCredentials(ssid, password).then((ok) {
+              if (!mounted) return;
+
+              if (ok) {
+                setState(() => _state = EspConnectState.connected);
+              } else {
+                setState(() => _state = EspConnectState.selectNetwork);
+              }
             });
           },
         );
@@ -141,9 +142,7 @@ class _EspConnectPageState extends State<EspConnectPage> {
   }
 
   Future<void> _checkPermissions() async {
-    _hasPermission = await _wifiController.hasScanningPermissions(
-      ask: false,
-    );
+    _hasPermission = await _wifiController.hasScanningPermissions(ask: false);
 
     if (!mounted) return;
 

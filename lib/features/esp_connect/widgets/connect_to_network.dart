@@ -11,14 +11,17 @@ class ConnectToNetwork extends StatefulWidget {
 }
 
 class _ConnectToNetworkState extends State<ConnectToNetwork> {
-  final _ssidController = TextEditingController();
-  final _passwordController = TextEditingController();
+  late final TextEditingController _ssidController;
+  late final TextEditingController _passwordController;
   bool _obscurePassword = true;
   bool _isError = false;
 
   @override
   void initState() {
     super.initState();
+
+    _ssidController = TextEditingController(text: widget.ssid ?? "");
+    _passwordController = TextEditingController();
   }
 
   @override
@@ -42,9 +45,7 @@ class _ConnectToNetworkState extends State<ConnectToNetwork> {
 
           TextField(
             readOnly: widget.ssid != null,
-            controller: widget.ssid == null
-              ? _ssidController
-              : TextEditingController(text: widget.ssid),
+            controller: _ssidController,
             decoration: const InputDecoration(
               labelText: 'WiFi SSID',
               prefixIcon: Icon(Icons.wifi),
