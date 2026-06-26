@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:train_dashboard_app/core/network/esp_wifi_provisioning.dart';
+import 'package:train_dashboard_app/core/utils/esp_wifi_provisioning.dart';
 import 'package:train_dashboard_app/features/esp_connect/controllers/esp_connect_controller.dart';
 import 'package:train_dashboard_app/features/esp_connect/controllers/wifi_controller.dart';
 import 'package:train_dashboard_app/features/esp_connect/widgets/connect_to_network.dart';

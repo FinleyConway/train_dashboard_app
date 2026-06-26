@@ -1,7 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:train_dashboard_app/core/network/esp_wifi_provisioning.dart';
+import 'package:train_dashboard_app/core/utils/esp_wifi_provisioning.dart';
 
 class EspConnectController extends ChangeNotifier {
   EspConnectState get state => _state;
