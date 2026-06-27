@@ -8,8 +8,10 @@ enum RailType {
 }
 
 class Rail {
-  late int railId;
-  late RailType railType;  
+  final int railId;
+  final RailType railType;  
+
+  Rail(this.railId, this.railType);
 
   Uint8List serialise() {
     final bytes = Uint8List(8 + 1);
@@ -21,17 +23,17 @@ class Rail {
     return bytes;
   }
 
-  bool deserialise(Uint8List payload) {
-    if (payload.length < 9) return false;
+  static Rail? deserialise(Uint8List payload) {
+    if (payload.length < 9) return null;
 
     final data = ByteData.sublistView(payload);
 
-    railId = data.getInt64(0, Endian.little);
+    final int railId = data.getInt64(0, Endian.little);
 
     final typeIndex = data.getUint8(8);
-    if (typeIndex >= RailType.values.length) return false;
-    railType = RailType.values[data.getUint8(8)]; 
+    if (typeIndex >= RailType.values.length) return null;
+    final RailType railType = RailType.values[data.getUint8(8)]; 
 
-    return true;
+    return Rail(railId, railType);
   }
 }
