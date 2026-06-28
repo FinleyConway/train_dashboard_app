@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:train_dashboard_app/core/nfc_data/rail.dart';
 import 'package:train_dashboard_app/features/rail_registering/controller/rail_nfc_scan.dart';
+import 'package:train_dashboard_app/features/rail_registering/widgets/nfc_read.dart';
+import 'package:train_dashboard_app/features/rail_registering/widgets/nfc_write.dart';
 
 class RailRegisterPage extends StatefulWidget {
   const RailRegisterPage({super.key});
@@ -14,8 +16,9 @@ class _RailRegisterPageState extends State<RailRegisterPage>
   late RailNfcScan _controller;
   late TabController _tabController;
 
-  Rail? railRead;
-  RailType selected = RailType.vertical;
+  Rail? _rail;
+  RailType _selected = RailType.vertical;
+  bool _isReading = false;
 
   @override
   void initState() {
@@ -26,7 +29,7 @@ class _RailRegisterPageState extends State<RailRegisterPage>
 
     _tabController.addListener(() {
       if (_tabController.indexIsChanging == false) {
-        onTabChanged(_tabController.index);
+        _onTabChanged(_tabController.index);
       }
     });
   }
@@ -34,7 +37,6 @@ class _RailRegisterPageState extends State<RailRegisterPage>
   @override
   void dispose() {
     _tabController.dispose();
-    _controller.dispose();
 
     super.dispose();
   }
@@ -58,104 +60,26 @@ class _RailRegisterPageState extends State<RailRegisterPage>
           ],
         ),
       ),
-      body: TabBarView(controller: _tabController, children: [write(), read()]),
-    );
-  }
-
-  Widget write() {
-    return ListenableBuilder(
-      listenable: _controller,
-      builder: (context, _) {
-        return SafeArea(
-          child: ListenableBuilder(
-            listenable: _controller,
-            builder: (context, _) {
-              return Padding(
-                padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      "Rail Type",
-                      style: TextStyle(color: Colors.grey),
-                    ),
-
-                    const SizedBox(height: 6),
-
-                    _buildDropdownField(),
-
-                    const Spacer(),
-
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton.icon(
-                        icon: const Icon(Icons.nfc),
-                        label: const Text("Write to NFC Tag"),
-                        onPressed: onWrite,
-                        style: ElevatedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                      ),
-                    ),
-
-                    const SizedBox(height: 12),
-                  ],
-                ),
-              );
-            },
+      body: TabBarView(
+        controller: _tabController,
+        children: [
+          NfcWrite(
+            selected: _selected,
+            onRailTypeChanged: (value) => setState(() {
+              _selected = value;
+            }),
+            onWrite: _onWrite,
           ),
-        );
-      },
-    );
-  }
-
-  Widget read() {
-    return ListenableBuilder(
-      listenable: _controller,
-      builder: (context, _) {
-        return Padding(
-          padding: const EdgeInsets.all(16),
-          child: railRead == null ? _buildEmptyState() : _buildSimpleRailView(),
-        );
-      },
-    );
-  }
-
-  Widget _buildDropdownField() {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12),
-      decoration: BoxDecoration(
-        border: Border.all(color: Colors.grey.shade300),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: DropdownMenu<RailType>(
-        initialSelection: selected,
-        inputDecorationTheme: const InputDecorationTheme(
-          border: InputBorder.none,
-        ),
-        dropdownMenuEntries: RailType.values.map((type) {
-          return DropdownMenuEntry(value: type, label: formatRailType(type));
-        }).toList(),
-        onSelected: (value) {
-          setState(() {
-            selected = value!;
-          });
-        },
+          NfcRead(rail: _rail),
+        ],
       ),
     );
   }
 
-  String formatRailType(RailType type) {
-    return type.name[0].toUpperCase() + type.name.substring(1);
-  }
-
-  Future<void> onWrite() async {
+  Future<void> _onWrite() async {
     _showNfcWaitingDialog();
 
-    final success = await _controller.registerRail(selected);
+    final success = await _controller.registerRail(_selected);
 
     if (!mounted) return;
 
@@ -173,8 +97,8 @@ class _RailRegisterPageState extends State<RailRegisterPage>
             Expanded(
               child: Text(
                 success
-                    ? 'Rail registered successfully.'
-                    : 'Failed to register rail.',
+                    ? "Rail registered successfully."
+                    : "Failed to register rail.",
               ),
             ),
           ],
@@ -186,17 +110,11 @@ class _RailRegisterPageState extends State<RailRegisterPage>
     );
   }
 
-  Future<void> onTabChanged(int tabIndex) async {
+  Future<void> _onTabChanged(int tabIndex) async {
     if (tabIndex == 0) {
-      await _controller.stopReadScan();
+      _stopReadLoop();
     } else if (tabIndex == 1) {
-      final result = await _controller.readRail();
-
-      if (!mounted) return;
-
-      setState(() {
-        railRead = result;
-      });
+      _startReadLoop();
     }
   }
 
@@ -213,14 +131,20 @@ class _RailRegisterPageState extends State<RailRegisterPage>
             mainAxisSize: MainAxisSize.min,
             children: const [
               Icon(Icons.nfc, size: 48),
+
               SizedBox(height: 16),
+
               Text(
                 "Hold device near NFC tag",
                 style: TextStyle(fontWeight: FontWeight.bold),
               ),
+
               SizedBox(height: 8),
+
               Text("Waiting for scan...", textAlign: TextAlign.center),
+
               SizedBox(height: 16),
+
               LinearProgressIndicator(),
             ],
           ),
@@ -229,49 +153,29 @@ class _RailRegisterPageState extends State<RailRegisterPage>
     );
   }
 
-  Widget _buildEmptyState() {
-    return const Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(Icons.radar, size: 64, color: Colors.grey),
-          SizedBox(height: 16),
-          Text("Waiting for NFC tag", style: TextStyle(fontSize: 16)),
-          SizedBox(height: 8),
-          Text(
-            "Hold your device near a rail tag",
-            textAlign: TextAlign.center,
-            style: TextStyle(color: Colors.grey),
-          ),
-        ],
-      ),
-    );
+  Future<void> _startReadLoop() async {
+    if (_isReading) return;
+
+    _isReading = true;
+
+    while (_isReading && mounted) {
+      final result = await _controller.readRail();
+
+      if (!mounted || !_isReading) break;
+
+      if (result != null) {
+        setState(() {
+          _rail = result;
+        });
+
+        await Future.delayed(const Duration(seconds: 3));
+      }
+    }
+
   }
 
-  Widget _buildSimpleRailView() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text("Rail ID", style: TextStyle(color: Colors.grey)),
-
-        const SizedBox(height: 6),
-
-        SelectableText(
-          railRead!.railId.toString(),
-          style: const TextStyle(fontSize: 18),
-        ),
-
-        const SizedBox(height: 24),
-
-        const Text("Rail Type", style: TextStyle(color: Colors.grey)),
-
-        const SizedBox(height: 6),
-
-        Text(
-          formatRailType(railRead!.railType),
-          style: const TextStyle(fontSize: 18),
-        ),
-      ],
-    );
+  void _stopReadLoop() {
+    _isReading = false;
+    _controller.stopReadScan();
   }
 }

@@ -2,12 +2,11 @@ import 'dart:convert';
 import 'dart:math';
 import 'dart:typed_data';
 
-import 'package:flutter/material.dart';
 import 'package:nfc_manager/ndef_record.dart';
 import 'package:train_dashboard_app/core/nfc_data/rail.dart';
 import 'package:train_dashboard_app/core/utils/nfc_io.dart';
 
-class RailNfcScan extends ChangeNotifier {
+class RailNfcScan {
   Future<bool> registerRail(RailType type) async {
     final rail = Rail(_generateId64(), type);
 

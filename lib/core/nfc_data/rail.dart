@@ -7,6 +7,21 @@ enum RailType {
   rightCurve
 }
 
+extension RailTypeExtension on RailType {
+  String get name {
+    switch (this) {
+      case RailType.horizontal:
+        return 'Horizontal';
+      case RailType.vertical:
+        return 'Vertical';
+      case RailType.leftCurve:
+        return 'Left Curve';
+      case RailType.rightCurve:
+        return 'Right Curve';
+    }
+  }
+}
+
 class Rail {
   final BigInt railId;
   final RailType railType;  
