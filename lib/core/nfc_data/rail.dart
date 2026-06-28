@@ -8,7 +8,7 @@ enum RailType {
 }
 
 class Rail {
-  final int railId;
+  final BigInt railId;
   final RailType railType;  
 
   Rail(this.railId, this.railType);
@@ -17,7 +17,7 @@ class Rail {
     final bytes = Uint8List(8 + 1);
     final data = ByteData.sublistView(bytes);
 
-    data.setInt64(0, railId, Endian.little); // esp uses little (and basically any modern phone)
+    data.setUint64(0, railId.toUnsigned(64).toInt(), Endian.little); // esp uses little (and basically any modern phone)
     data.setUint8(8, railType.index);
 
     return bytes;
@@ -28,7 +28,8 @@ class Rail {
 
     final data = ByteData.sublistView(payload);
 
-    final int railId = data.getInt64(0, Endian.little);
+    final rawId = data.getUint64(0, Endian.little);
+    final railId = BigInt.from(rawId);
 
     final typeIndex = data.getUint8(8);
     if (typeIndex >= RailType.values.length) return null;

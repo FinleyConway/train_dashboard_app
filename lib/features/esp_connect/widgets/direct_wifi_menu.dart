@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:train_dashboard_app/features/esp_connect/controllers/esp_connect_controller.dart';
 import 'package:train_dashboard_app/features/esp_connect/controllers/wifi_controller.dart';
-import 'package:train_dashboard_app/features/esp_connect/widgets/status_button.dart';
+import 'package:train_dashboard_app/features/widgets/status_button.dart';
 
 class DirectWifiMenu extends StatelessWidget {
   final WifiController wifiController;

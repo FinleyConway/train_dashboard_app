@@ -29,6 +29,9 @@ class NfcIo {
           if (ndef == null) {
             await NfcManager.instance.stopSession();
             completer.complete(false);
+
+            print("Tag is not compatiable");
+
             return;
           }
 
@@ -46,6 +49,8 @@ class NfcIo {
         } catch (e) {
           await NfcManager.instance.stopSession();
           completer.complete(false);
+
+          print("Failed to write: $e");
         }
       },
     );
@@ -89,5 +94,9 @@ class NfcIo {
     );
 
     return completer.future;
+  }
+
+  static Future<void> stop() async {
+    await NfcManager.instance.stopSession();
   }
 }

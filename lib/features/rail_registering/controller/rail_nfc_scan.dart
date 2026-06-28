@@ -8,25 +8,14 @@ import 'package:train_dashboard_app/core/nfc_data/rail.dart';
 import 'package:train_dashboard_app/core/utils/nfc_io.dart';
 
 class RailNfcScan extends ChangeNotifier {
-  bool _isScanning = false;
-  bool get isScanning => _isScanning;
-
   Future<bool> registerRail(RailType type) async {
     final rail = Rail(_generateId64(), type);
-
-    notifyListeners();
 
     return await NfcIo.writeTo("rail", rail.serialise());
   } 
 
   Future<Rail?> readRail() async {
-    _isScanning = true;
-    notifyListeners();
-
     final NdefRecord? record = await NfcIo.readFrom();
-
-    _isScanning = false;
-    notifyListeners();
 
     if (record == null) return null;
 
@@ -37,7 +26,11 @@ class RailNfcScan extends ChangeNotifier {
     return null;
   }
 
-  int _generateId64() {
+  Future<void> stopReadScan() async {
+    await NfcIo.stop();
+  }
+
+  BigInt _generateId64() {
     final random = Random.secure();
     final bytes = ByteData(8);
 
@@ -45,6 +38,6 @@ class RailNfcScan extends ChangeNotifier {
       bytes.setUint8(i, random.nextInt(256));
     }
 
-    return bytes.getInt64(0, Endian.little); // esp32 is small endians
+    return BigInt.from(bytes.getUint64(0, Endian.little)); // esp32 is small endians
   }
 }
