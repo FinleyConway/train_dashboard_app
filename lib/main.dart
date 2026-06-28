@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:train_dashboard_app/features/esp_connect/esp_connect_page.dart';
+import 'package:train_dashboard_app/features/manual_control/manual_control_page.dart';
 import 'package:train_dashboard_app/features/rail_registering/rail_register_page.dart';
 
 void main() {
@@ -16,7 +17,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         colorScheme: .fromSeed(seedColor: Colors.deepPurple),
       ),
-      home: const RailRegisterPage(),
+      home: const ManualControlPage(),
     );
   }
 }
